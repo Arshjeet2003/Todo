@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">To Do List</string>
+    <string name="empty_view_title_text">No task here.</string>
+    <string name="empty_view_subtitle_text">Add tasks to get started…</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_delete_all_entries">Delete all tasks</string>
+    <string name="hint_task_name">Name</string>
+    <string name="hint_task_description">Description</string>
+    <string name="category_priority">Priority</string>
+    <string name="category_time">Time</string>
+    <string name="hint_task_time">12:30</string>
+    <string name="category_overview">Overview</string>
+    <string name="low_priority">Low priority</string>
+    <string name="medium_priority">Medium priority</string>
+    <string name="high_priority">High priority</string>
+    <string name="editor_activity_title_new_task">Add task</string>
+    <string name="editor_activity_title_edit_task">Edit task</string>
+    <string name="Discard">Discard</string>
+    <string name="keep_editing">Keep editing</string>
+    <string name="unsaved_changed_dialog_msg">Do you want to discard your changes?</string>
+    <string name="delete_dialog_msg">Do you want to delete this task?</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+</resources>
