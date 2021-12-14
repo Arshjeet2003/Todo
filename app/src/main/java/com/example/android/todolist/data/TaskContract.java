@@ -35,6 +35,7 @@ public final class TaskContract {
         public final static String COLUMN_TASK_DESCRIPTION= "description";
         public final static String COLUMN_TASK_PRIORITY = "priority";
         public final static String COLUMN_TASK_TIME = "time";
+        public final static String COLUMN_TASK_STATUS = "status";
 
 
         public static final int PRIORITY_LOW = 0;

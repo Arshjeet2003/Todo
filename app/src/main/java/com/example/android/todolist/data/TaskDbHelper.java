@@ -24,7 +24,8 @@ public class TaskDbHelper extends SQLiteOpenHelper {
                 + TaskContract.TaskEntry.COLUMN_TASK_NAME + " TEXT NOT NULL, "
                 + TaskContract.TaskEntry.COLUMN_TASK_DESCRIPTION + " TEXT, "
                 + TaskContract.TaskEntry.COLUMN_TASK_PRIORITY + " INTEGER NOT NULL, "
-                + TaskContract.TaskEntry.COLUMN_TASK_TIME + " INTEGER NOT NULL DEFAULT 0);";
+                + TaskContract.TaskEntry.COLUMN_TASK_TIME + " INTEGER NOT NULL DEFAULT 0,"
+                + TaskContract.TaskEntry.COLUMN_TASK_STATUS + " TEXT NOT NULL);";
 
         // Execute the SQL statement
         db.execSQL(SQL_CREATE_PETS_TABLE);

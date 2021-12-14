@@ -4,27 +4,34 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.LoaderManager;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.example.android.todolist.data.TaskContract.TaskEntry;
 import com.example.android.todolist.data.TaskDbHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class CatalogActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final int PET_LOADER = 0;
+    private static final int TASK_LOADER = 0;
 
     TaskCursorAdapter mCursorAdapter;
 
@@ -34,7 +41,6 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_catalog);
-
         // Setup FAB to open EditorActivity
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -53,15 +59,24 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
         mCursorAdapter = new TaskCursorAdapter(this ,null);
         taskListView.setAdapter(mCursorAdapter);
-
+        taskListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences_key),MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString(getString(R.string.status_key),getString(R.string.done));
+                editor.apply();
+                Toast.makeText(getApplicationContext(),"Press save to complete task.",Toast.LENGTH_LONG).show();
+                taskListView.performItemClick(view,position,id);
+                return false;
+            }
+        });
 //        setup the item click listener
         taskListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                Intent intent = new Intent(CatalogActivity.this , EditorActivity.class);
-
-                Uri currentPetUri = ContentUris.withAppendedId(TaskEntry.CONTENT_URI,id);
-
+                Intent intent = new Intent(CatalogActivity.this, EditorActivity.class);
+                Uri currentPetUri = ContentUris.withAppendedId(TaskEntry.CONTENT_URI, id);
                 //setting the URI on the data field of the intent
                 intent.setData(currentPetUri);
                 startActivity(intent);
@@ -69,7 +84,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         });
 
         //kick off the loader
-        getLoaderManager().initLoader(PET_LOADER,null,this);
+        getLoaderManager().initLoader(TASK_LOADER,null,this);
 
     }
 
@@ -109,6 +124,8 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         String[] projection = {
                 TaskEntry._ID,
                 TaskEntry.COLUMN_TASK_NAME,
+                TaskEntry.COLUMN_TASK_PRIORITY,
+                TaskEntry.COLUMN_TASK_STATUS
         };
         return new CursorLoader(this,
                 TaskEntry.CONTENT_URI,

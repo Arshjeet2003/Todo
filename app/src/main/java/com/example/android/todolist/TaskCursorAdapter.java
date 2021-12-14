@@ -2,12 +2,15 @@ package com.example.android.todolist;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.text.TextUtils;
+import android.graphics.Paint;
+import android.graphics.drawable.GradientDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.todolist.data.TaskContract;
 
@@ -57,12 +60,30 @@ public class TaskCursorAdapter extends CursorAdapter {
 
         //find individual views that we want to modify in the list item view
         TextView nameTextView = (TextView) view.findViewById(R.id.name);
-
+        TextView priority_color = (TextView) view.findViewById(R.id.priority_color);
+        TextView number = (TextView) view.findViewById(R.id.number);
         int nameColumnIndex = cursor.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_NAME);
+        int priority = cursor.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_PRIORITY);
+        int status = cursor.getColumnIndex(TaskContract.TaskEntry.COLUMN_TASK_STATUS);
+        String taskStatus = cursor.getString(status);
+        String taskPriority = cursor.getString(priority);
+        String taskName = cursor.getString(nameColumnIndex);
 
-        String petName = cursor.getString(nameColumnIndex);
-
-        nameTextView.setText(petName);
-
+        number.setText(String.valueOf(cursor.getPosition()+1)+")");
+        nameTextView.setText(taskName);
+        int color_priority = Integer.parseInt(taskPriority);
+        if(taskStatus.equals(R.string.done)){
+            nameTextView.setPaintFlags(Paint.STRIKE_THRU_TEXT_FLAG);
+        }
+        GradientDrawable background = (GradientDrawable) priority_color.getBackground();
+        switch (color_priority){
+            case 0: background.setColor(context.getResources().getColor(R.color.green_lowPriority));
+            break;
+            case 1: background.setColor(context.getResources().getColor(R.color.orange_mediumPriority));
+            break;
+            case 2: background.setColor(context.getResources().getColor(R.color.red_highPriority));
+            break;
+            default: priority_color.setBackgroundColor(context.getResources().getColor(R.color.white));
+        }
     }
 }

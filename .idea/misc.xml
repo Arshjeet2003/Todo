@@ -7,11 +7,12 @@
         <entry key="..\:/Apps/ToDoList/app/src/main/res/drawable/ic_done.xml" value="0.1527777777777778" />
         <entry key="..\:/Apps/ToDoList/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1527777777777778" />
         <entry key="..\:/Apps/ToDoList/app/src/main/res/drawable/no_task.xml" value="0.1527777777777778" />
+        <entry key="..\:/Apps/ToDoList/app/src/main/res/drawable/rounded_textview.xml" value="0.1712962962962963" />
         <entry key="..\:/Apps/ToDoList/app/src/main/res/drawable/save.xml" value="0.16203703703703703" />
-        <entry key="..\:/Apps/ToDoList/app/src/main/res/layout/activity_catalog.xml" value="0.5" />
+        <entry key="..\:/Apps/ToDoList/app/src/main/res/layout/activity_catalog.xml" value="0.39166666666666666" />
         <entry key="..\:/Apps/ToDoList/app/src/main/res/layout/activity_editor.xml" value="0.33" />
         <entry key="..\:/Apps/ToDoList/app/src/main/res/layout/activity_main.xml" value="0.19583333333333333" />
-        <entry key="..\:/Apps/ToDoList/app/src/main/res/layout/list_item.xml" value="0.19583333333333333" />
+        <entry key="..\:/Apps/ToDoList/app/src/main/res/layout/list_item.xml" value="0.33" />
         <entry key="..\:/Apps/ToDoList/app/src/main/res/menu/menu_catalog.xml" value="0.19583333333333333" />
         <entry key="..\:/Apps/ToDoList/app/src/main/res/menu/menu_editor.xml" value="0.19583333333333333" />
       </map>

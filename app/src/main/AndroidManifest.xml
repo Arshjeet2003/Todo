@@ -31,6 +31,9 @@
             android:name=".data.TaskProvider"
             android:authorities="com.example.android.todolist"
             android:exported="false" />
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>

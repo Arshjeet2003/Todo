@@ -9,6 +9,7 @@ import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -23,6 +24,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import android.os.Bundle;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.todolist.data.TaskContract;
@@ -66,6 +68,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
      * Gender of the pet. The possible values are:
      * 0 for unknown gender, 1 for male, 2 for female.
      */
+    private TextView mDone;
     private int mPriority = 0;
 
     /** Boolean flag that keeps track of whether the pet has been edited (true) or not (false) */
@@ -115,7 +118,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mDescriptionEditText = (EditText) findViewById(R.id.edit_pet_breed);
         mTimeEditText = (EditText) findViewById(R.id.edit_pet_weight);
         mPrioritySpinner = (Spinner) findViewById(R.id.spinner_gender);
-
+        mDone = (TextView) findViewById(R.id.done);
         // Setup OnTouchListeners on all the input fields, so we can determine if the user
         // has touched or modified them. This will let us know if there are unsaved changes
         // or not, if the user tries to leave the editor without saving.
@@ -123,8 +126,29 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mDescriptionEditText.setOnTouchListener(mTouchListener);
         mTimeEditText.setOnTouchListener(mTouchListener);
         mPrioritySpinner.setOnTouchListener(mTouchListener);
+        mDone.setOnTouchListener(mTouchListener);
 
         setupSpinner();
+//        mDone.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                String status =  mDone.getText().toString();
+//                if(status.equals(R.string.pending_task)) {
+//                    mDone.setText("Done");
+//                    SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences_key), MODE_PRIVATE);
+//                    SharedPreferences.Editor editor = sharedPreferences.edit();
+//                    editor.putString(getString(R.string.status_key), "Done");
+//                    editor.apply();
+//                }
+//                else{
+//                    mDone.setText(R.string.pending_task);
+//                    SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences_key), MODE_PRIVATE);
+//                    SharedPreferences.Editor editor = sharedPreferences.edit();
+//                    editor.putString(getString(R.string.status_key), getString(R.string.pending_task));
+//                    editor.apply();
+//                }
+//            }
+//        });
     }
 
     /**
@@ -161,7 +185,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             // Because AdapterView is an abstract class, onNothingSelected must be defined
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                mPriority = 0; // Unknown
+                mPriority = 0;
             }
         });
     }
@@ -177,13 +201,22 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         {
             return;
         }
-
-
+        SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences_key),MODE_PRIVATE);
+        String status = sharedPreferences.getString(getString(R.string.status_key), getString(R.string.pending_task));
         ContentValues values = new ContentValues();
         values.put(TaskEntry.COLUMN_TASK_NAME, nameString);
         values.put(TaskEntry.COLUMN_TASK_DESCRIPTION, descriptionString);
         values.put(TaskEntry.COLUMN_TASK_PRIORITY, mPriority);
-
+        if(mDone.getText().toString().equals(getResources().getString(R.string.done)) || status.equals(getResources().getString(R.string.done))) {
+            values.put(TaskEntry.COLUMN_TASK_STATUS, getResources().getString(R.string.done));
+        }
+        else{
+            values.put(TaskEntry.COLUMN_TASK_STATUS, status);
+        }
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.clear();
+        editor.apply();
+//        values.put(TaskEntry.COLUMN_TASK_STATUS,"done");
         // If the time is not provided by the user, don't try to parse the string into an
         // integer value. Use 0 by default.
         int time = 0;
@@ -205,10 +238,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             {
                 Toast.makeText(this, "Inserting new task failed",Toast.LENGTH_SHORT).show();
             }
-            else{
-                Toast.makeText(this,"Inserting task successful",Toast.LENGTH_LONG).show();
 
-            }
         }else{
             // Otherwise this is an EXISTING pet, so update the pet with content URI: mCurrentPetUri
             // and pass in the new ContentValues. Pass in null for the selection and selection args
@@ -223,12 +253,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 // If no rows were affected, then there was an error with the update.
                 Toast.makeText(this,"Inserting new task failed",Toast.LENGTH_SHORT).show();
             }
-            else
-            {
-                // Otherwise, the update was successful and we can display a toast.
-                Toast.makeText(this,"Inserting new task successful",Toast.LENGTH_SHORT).show();
-            }
-
         }
     }
 
@@ -341,7 +365,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 TaskEntry.COLUMN_TASK_NAME,
                 TaskEntry.COLUMN_TASK_DESCRIPTION,
                 TaskEntry.COLUMN_TASK_PRIORITY,
-                TaskEntry.COLUMN_TASK_TIME
+                TaskEntry.COLUMN_TASK_TIME,
+                TaskEntry.COLUMN_TASK_STATUS
         };
         // This loader will execute the ContentProvider's query method on a background thread
         return new CursorLoader(this, //Parent activity content
@@ -368,19 +393,23 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             int descriptionColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_DESCRIPTION);
             int priorityColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_PRIORITY);
             int timeColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_TIME);
+            int statusColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_STATUS);
 
             // Extract out the value from the Cursor for the given column index
             String name = cursor.getString(nameColumnIndex);
-            String breed = cursor.getString(descriptionColumnIndex);
+            String description = cursor.getString(descriptionColumnIndex);
             int priority = cursor.getInt(priorityColumnIndex);
             int weight = cursor.getInt(timeColumnIndex);
-
+            String status = cursor.getString(statusColumnIndex);
             // Update the views on the screen with the values from the database
 
             mNameEditText.setText(name);
-            mDescriptionEditText.setText(breed);
+            mDescriptionEditText.setText(description);
             mTimeEditText.setText(Integer.toString(weight));
-
+            mDone.setText(status);
+            if(status.equals(getResources().getString(R.string.done))){
+                mDone.setTextColor(getResources().getColor(R.color.green_lowPriority));
+            }
             // Gender is a dropdown spinner, so map the constant value from the database
             // into one of the dropdown options (0 is Unknown, 1 is Male, 2 is Female)
             // Then call setSelection() so that option is displayed on screen as the current selection
@@ -407,7 +436,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mDescriptionEditText.setText("");
         mTimeEditText.setText("");
         mPrioritySpinner.setSelection(0);
-
+        mDone.setText(R.string.pending_task);
     }
 
     /**
