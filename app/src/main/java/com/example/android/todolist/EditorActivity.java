@@ -2,9 +2,14 @@ package com.example.android.todolist;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
+import androidx.core.app.NotificationCompat;
+
 import android.app.AlertDialog;
 import android.app.LoaderManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,6 +18,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,13 +37,16 @@ import com.example.android.todolist.data.TaskContract;
 import com.example.android.todolist.data.TaskContract.TaskEntry;
 import com.example.android.todolist.data.TaskDbHelper;
 
+import java.util.Locale;
+
 public class EditorActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     /**
      * Identifier for the pet data loader
      */
     private static final int EXISTING_TASK_LOADER = 0;
-
+    private static final String CHANNEL_ID = "Notification";
+    int c;
     /**
      * Content URI for the existing pet (null if it's a new pet)
      */
@@ -71,9 +80,10 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     private TextView mDone;
     private int mPriority = 0;
 
-    /** Boolean flag that keeps track of whether the pet has been edited (true) or not (false) */
-    private boolean mTaskHasChanged = false ;
-
+    /**
+     * Boolean flag that keeps track of whether the pet has been edited (true) or not (false)
+     */
+    private boolean mTaskHasChanged = false;
     /**
      * OnTouchListener that listens for any user touches on a View, implying that they are modifying
      * the view, and we change the mPetHasChanged boolean to true.
@@ -85,7 +95,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             return false;
         }
     };
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,7 +135,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mDescriptionEditText.setOnTouchListener(mTouchListener);
         mTimeEditText.setOnTouchListener(mTouchListener);
         mPrioritySpinner.setOnTouchListener(mTouchListener);
-        mDone.setOnTouchListener(mTouchListener);
 
         setupSpinner();
 //        mDone.setOnClickListener(new View.OnClickListener() {
@@ -202,6 +210,26 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             return;
         }
         SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences_key),MODE_PRIVATE);
+        SharedPreferences sharedPreferences1 = getSharedPreferences("sharedpreferences_key2",MODE_PRIVATE);
+        c = sharedPreferences1.getInt("count",0);
+        createNotificationChannel();
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        builder.setSmallIcon(R.drawable.list_icon);
+        builder.setContentTitle(nameString);
+        builder.setOngoing(false);
+        if(mPriority==0){
+            builder.setContentText(getString(R.string.low_priority).toUpperCase());
+        }
+        else if(mPriority==1){
+            builder.setContentText(getString(R.string.medium_priority).toUpperCase());
+        }
+        else {
+            builder.setContentText(getString(R.string.high_priority).toUpperCase());
+        }
+        builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        Increment_c();
         String status = sharedPreferences.getString(getString(R.string.status_key), getString(R.string.pending_task));
         ContentValues values = new ContentValues();
         values.put(TaskEntry.COLUMN_TASK_NAME, nameString);
@@ -209,14 +237,16 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         values.put(TaskEntry.COLUMN_TASK_PRIORITY, mPriority);
         if(mDone.getText().toString().equals(getResources().getString(R.string.done)) || status.equals(getResources().getString(R.string.done))) {
             values.put(TaskEntry.COLUMN_TASK_STATUS, getResources().getString(R.string.done));
+            builder.setContentText("TASK COMPLETED");
+            mNotificationManager.notify(c, builder.build());
         }
         else{
+            mNotificationManager.notify(c, builder.build());
             values.put(TaskEntry.COLUMN_TASK_STATUS, status);
         }
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.apply();
-//        values.put(TaskEntry.COLUMN_TASK_STATUS,"done");
         // If the time is not provided by the user, don't try to parse the string into an
         // integer value. Use 0 by default.
         int time = 0;
@@ -254,6 +284,15 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 Toast.makeText(this,"Inserting new task failed",Toast.LENGTH_SHORT).show();
             }
         }
+
+    }
+
+    private void Increment_c() {
+        c++;
+        SharedPreferences preferences = getSharedPreferences("sharedpreferences_key2",MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt("count",c);
+        editor.apply();
     }
 
     @Override
@@ -289,7 +328,12 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
                 // saving pet in database
-                saveTask();
+                if(!(mDone.getText().toString().equals(getString(R.string.done)))) {
+                    saveTask();
+                }
+                else{
+                    Toast.makeText(getApplicationContext(),"No changes can be made to the completed task.",Toast.LENGTH_SHORT).show();
+                }
                 //going back to catalog activity
                 finish();
                 return true;
@@ -485,7 +529,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             @Override
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked the "Delete" button, so delete the pet.
-                deletePet();
+                deleteTask();
             }
         });
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -507,7 +551,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     /**
      * Perform the deletion of the pet in the database.
      */
-    private void deletePet()
+    private void deleteTask()
     {
         // Only perform the delete if this is an existing pet
         if(mCurrentTaskUri !=null)
@@ -532,7 +576,21 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             }
         }
         finish();
-
     }
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(R.string.channel_name);
+            String description = getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_LOW;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
 }

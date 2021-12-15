@@ -27,4 +27,6 @@
     <string name="sharedpreferences_key">taskstatus</string>
     <string name="status_key">taskdone</string>
     <string name="done">Done</string>
+    <string name="channel_name">Channel_Name</string>
+    <string name="channel_description">channel description</string>
 </resources>

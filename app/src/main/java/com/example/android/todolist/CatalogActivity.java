@@ -95,7 +95,9 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     {
         int rowsDeleted = getContentResolver().delete(TaskEntry.CONTENT_URI,null,null);
         Log.v("Catalog Activity" , rowsDeleted + " rows deleted from pet database");
-
+        SharedPreferences preferences = getSharedPreferences("sharedpreferences_key2",MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.clear(); editor.apply();
     }
 
 
