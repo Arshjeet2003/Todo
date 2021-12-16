@@ -69,10 +69,10 @@ public class TaskCursorAdapter extends CursorAdapter {
         String taskPriority = cursor.getString(priority);
         String taskName = cursor.getString(nameColumnIndex);
 
-        number.setText(String.valueOf(cursor.getPosition()+1)+")");
+        number.setText(String.valueOf(cursor.getPosition() + 1) + ")");
         nameTextView.setText(taskName);
         int color_priority = Integer.parseInt(taskPriority);
-        if(taskStatus.equals(R.string.done)){
+        if(taskStatus.equals(context.getResources().getString(R.string.done))){
             nameTextView.setPaintFlags(Paint.STRIKE_THRU_TEXT_FLAG);
         }
         GradientDrawable background = (GradientDrawable) priority_color.getBackground();

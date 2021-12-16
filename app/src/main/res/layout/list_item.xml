@@ -27,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:fontFamily="@font/ubuntu_medium"
+            android:fontFamily="@font/adamina"
             android:padding="5dp"
             android:textAppearance="?android:textAppearanceMedium"
             android:textColor="#C9000000"

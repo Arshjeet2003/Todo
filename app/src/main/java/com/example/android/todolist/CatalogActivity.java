@@ -2,6 +2,7 @@ package com.example.android.todolist;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.app.LoaderManager;
+import android.app.NotificationManager;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
@@ -79,6 +80,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
                 Uri currentPetUri = ContentUris.withAppendedId(TaskEntry.CONTENT_URI, id);
                 //setting the URI on the data field of the intent
                 intent.setData(currentPetUri);
+                intent.putExtra("id",position);
                 startActivity(intent);
             }
         });
@@ -115,6 +117,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         // Respond to a click on the "Delete all entries" menu option
         if (item.getItemId() == R.id.action_delete_all_entries) {
             deleteAllPets();
+            cancel_all_notifications();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -147,5 +150,9 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     public void onLoaderReset(Loader<Cursor> loader) {
         mCursorAdapter.swapCursor(null);
 
+    }
+    private void cancel_all_notifications(){
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancelAll();
     }
 }

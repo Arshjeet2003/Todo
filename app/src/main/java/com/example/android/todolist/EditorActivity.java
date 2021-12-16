@@ -46,7 +46,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
      */
     private static final int EXISTING_TASK_LOADER = 0;
     private static final String CHANNEL_ID = "Notification";
-    int c;
+    int ID=0;
     /**
      * Content URI for the existing pet (null if it's a new pet)
      */
@@ -105,6 +105,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         // in order to figure out if we're creating a new pet or editing an existing one
         Intent intent = getIntent();
         mCurrentTaskUri = intent.getData();
+         ID = intent.getIntExtra("id",0);
 
         //If the intent DOES NOT contain a pet content URI , then we know that we
         //creating a new pet.
@@ -137,26 +138,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mPrioritySpinner.setOnTouchListener(mTouchListener);
 
         setupSpinner();
-//        mDone.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                String status =  mDone.getText().toString();
-//                if(status.equals(R.string.pending_task)) {
-//                    mDone.setText("Done");
-//                    SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences_key), MODE_PRIVATE);
-//                    SharedPreferences.Editor editor = sharedPreferences.edit();
-//                    editor.putString(getString(R.string.status_key), "Done");
-//                    editor.apply();
-//                }
-//                else{
-//                    mDone.setText(R.string.pending_task);
-//                    SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences_key), MODE_PRIVATE);
-//                    SharedPreferences.Editor editor = sharedPreferences.edit();
-//                    editor.putString(getString(R.string.status_key), getString(R.string.pending_task));
-//                    editor.apply();
-//                }
-//            }
-//        });
     }
 
     /**
@@ -210,26 +191,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             return;
         }
         SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.sharedpreferences_key),MODE_PRIVATE);
-        SharedPreferences sharedPreferences1 = getSharedPreferences("sharedpreferences_key2",MODE_PRIVATE);
-        c = sharedPreferences1.getInt("count",0);
-        createNotificationChannel();
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
-        builder.setSmallIcon(R.drawable.list_icon);
-        builder.setContentTitle(nameString);
-        builder.setOngoing(false);
-        if(mPriority==0){
-            builder.setContentText(getString(R.string.low_priority).toUpperCase());
-        }
-        else if(mPriority==1){
-            builder.setContentText(getString(R.string.medium_priority).toUpperCase());
-        }
-        else {
-            builder.setContentText(getString(R.string.high_priority).toUpperCase());
-        }
-        builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
-        NotificationManager mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        Increment_c();
         String status = sharedPreferences.getString(getString(R.string.status_key), getString(R.string.pending_task));
         ContentValues values = new ContentValues();
         values.put(TaskEntry.COLUMN_TASK_NAME, nameString);
@@ -237,11 +198,9 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         values.put(TaskEntry.COLUMN_TASK_PRIORITY, mPriority);
         if(mDone.getText().toString().equals(getResources().getString(R.string.done)) || status.equals(getResources().getString(R.string.done))) {
             values.put(TaskEntry.COLUMN_TASK_STATUS, getResources().getString(R.string.done));
-            builder.setContentText("TASK COMPLETED");
-            mNotificationManager.notify(c, builder.build());
+            notification_cancel();
         }
         else{
-            mNotificationManager.notify(c, builder.build());
             values.put(TaskEntry.COLUMN_TASK_STATUS, status);
         }
         SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -287,14 +246,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     }
 
-    private void Increment_c() {
-        c++;
-        SharedPreferences preferences = getSharedPreferences("sharedpreferences_key2",MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putInt("count",c);
-        editor.apply();
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu options from the res/menu/menu_editor.xml file.
@@ -316,6 +267,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         {
             MenuItem menuItem = menu.findItem(R.id.action_delete);
             menuItem.setVisible(false);
+            MenuItem menuItem1 = menu.findItem(R.id.notification);
+            menuItem1.setVisible(false);
         }
         return true;
 
@@ -325,6 +278,15 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     public boolean onOptionsItemSelected(MenuItem item) {
         // User clicked on a menu option in the app bar overflow menu
         switch (item.getItemId()) {
+            case R.id.notification:
+                if(!mDone.getText().equals(getString(R.string.done))) {
+                createNotificationChannel();
+                send_Notification();
+            }
+                else{
+                    send_Notification();
+                }
+                break;
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
                 // saving pet in database
@@ -428,7 +390,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         if (cursor == null || cursor.getCount() < 1) {
             return;
         }
-
         // Proceed with moving to the first row of the cursor and reading data from it
         // (This should be the only row in the cursor)
         if (cursor.moveToNext()) {
@@ -438,7 +399,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             int priorityColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_PRIORITY);
             int timeColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_TIME);
             int statusColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_STATUS);
-
             // Extract out the value from the Cursor for the given column index
             String name = cursor.getString(nameColumnIndex);
             String description = cursor.getString(descriptionColumnIndex);
@@ -475,7 +435,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         // If the loader is invalidated, clear out all the data from the input fields
-
         mNameEditText.setText("");
         mDescriptionEditText.setText("");
         mTimeEditText.setText("");
@@ -512,8 +471,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         // Create and show the AlertDialog
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
-
-
     }
 
     /**
@@ -575,6 +532,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                         Toast.LENGTH_SHORT).show();
             }
         }
+        notification_cancel();
         finish();
     }
     private void createNotificationChannel() {
@@ -592,5 +550,31 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
+    }
+    private void send_Notification(){
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID);
+        builder.setSmallIcon(R.drawable.list_icon);
+        builder.setContentTitle(mNameEditText.getText());
+        builder.setOngoing(true);
+        if(mPriority==0){
+            builder.setContentText(getString(R.string.low_priority).toUpperCase());
+        }
+        else if(mPriority==1){
+            builder.setContentText(getString(R.string.medium_priority).toUpperCase());
+        }
+        else {
+            builder.setContentText(getString(R.string.high_priority).toUpperCase());
+        }
+        builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        if(mDone.getText().equals(getString(R.string.done))) {
+         builder.setContentText(getString(R.string.task_completed));
+        }
+            NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNotificationManager.notify(ID, builder.build());
+    }
+    private void notification_cancel() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(ID);
     }
 }

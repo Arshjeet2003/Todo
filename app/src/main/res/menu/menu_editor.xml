@@ -13,6 +13,13 @@
         app:showAsAction="always" />
 
     <item
+        android:id="@+id/notification"
+        android:title="Notification"
+        android:icon="@drawable/notification"
+        app:showAsAction="always"
+        />
+
+    <item
         android:id="@+id/action_delete"
         android:title="@string/action_delete"
         app:showAsAction="never" />

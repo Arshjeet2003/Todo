@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">To Do List</string>
-    <string name="empty_view_title_text">No task here.</string>
+    <string name="empty_view_title_text">No task here</string>
     <string name="empty_view_subtitle_text">Add tasks to get started…</string>
     <string name="action_save">Save</string>
     <string name="action_delete">Delete</string>
@@ -27,6 +27,7 @@
     <string name="sharedpreferences_key">taskstatus</string>
     <string name="status_key">taskdone</string>
     <string name="done">Done</string>
-    <string name="channel_name">Channel_Name</string>
+    <string name="channel_name">Channel Name</string>
     <string name="channel_description">channel description</string>
+    <string name="task_completed">Task Completed</string>
 </resources>
