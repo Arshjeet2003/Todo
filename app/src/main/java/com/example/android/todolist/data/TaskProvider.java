@@ -97,20 +97,11 @@ public class TaskProvider extends ContentProvider {
             throw new IllegalArgumentException("Task requires a name");
         }
 
-        //gender is valid or not
+
         Integer priority = values.getAsInteger(TaskContract.TaskEntry.COLUMN_TASK_PRIORITY);
         if (priority == null || !TaskContract.TaskEntry.isValidPriority(priority)) {
             throw new IllegalArgumentException("Requires valid gender");
         }
-
-        // If the time is provided, check that it's greater than or equal to 0 kg
-        Integer time = values.getAsInteger(TaskContract.TaskEntry.COLUMN_TASK_TIME);
-        if (time != null && time < 0) {
-            throw new IllegalArgumentException("Requires valid time");
-
-        }
-        // No need to check the breed, any value is valid (including null).
-
 
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
@@ -176,12 +167,6 @@ public class TaskProvider extends ContentProvider {
         }
         // If the {@link PetEntry#COLUMN_PET_WEIGHT} key is present,
         // check that the weight value is valid.
-        if (values.containsKey(TaskContract.TaskEntry.COLUMN_TASK_TIME)) {
-            Integer time = values.getAsInteger(TaskContract.TaskEntry.COLUMN_TASK_TIME);
-            if (time != null && time < 0) {
-                throw new IllegalArgumentException("Task requires valid time");
-            }
-        }
         if (values.size() == 0) {
             return 0;
         }

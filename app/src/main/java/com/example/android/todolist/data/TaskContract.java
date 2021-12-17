@@ -34,7 +34,8 @@ public final class TaskContract {
         public final static String COLUMN_TASK_NAME = "name";
         public final static String COLUMN_TASK_DESCRIPTION= "description";
         public final static String COLUMN_TASK_PRIORITY = "priority";
-        public final static String COLUMN_TASK_TIME = "time";
+        public final static String COLUMN_TASK_HOURS = "hours";
+        public final static String COLUMN_TASK_MIN = "minutes";
         public final static String COLUMN_TASK_STATUS = "status";
 
 

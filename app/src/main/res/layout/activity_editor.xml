@@ -97,6 +97,7 @@
         <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
+            android:layout_gravity="center"
             android:text="@string/category_time"
             android:textSize="20sp" />
 
@@ -106,18 +107,51 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2"
-            android:paddingLeft="4dp">
+            android:padding="4dp">
 
-            <!-- Weight field -->
-            <EditText
-                android:id="@+id/edit_pet_weight"
-                style="@style/EditorFieldStyle"
-                android:hint="@string/hint_task_time"
-                android:inputType="number"
-                android:padding="10dp"
-                android:textSize="25sp" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
 
-            <!-- Units for weight (kg) -->
+                <EditText
+                    android:id="@+id/hours"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:inputType="number"
+                    android:textSize="25sp" />
+
+                <TextView
+                    android:id="@+id/textView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text=":"
+                    android:textSize="30sp" />
+
+                <EditText
+                    android:id="@+id/min"
+                    android:layout_width="40dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:inputType="number"
+                    android:textSize="25sp" />
+
+                <TextView
+                    android:id="@+id/set_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginBottom="8dp"
+                    android:background="@drawable/rounded_textview"
+                    android:gravity="center"
+                    android:padding="5dp"
+                    android:text="Set Time"
+                    android:textSize="15sp" />
+            </LinearLayout>
+
         </RelativeLayout>
     </LinearLayout>
 

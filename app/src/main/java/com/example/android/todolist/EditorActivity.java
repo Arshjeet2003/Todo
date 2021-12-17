@@ -4,10 +4,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
 import androidx.core.app.NotificationCompat;
 
+import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TimePickerDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.CursorLoader;
@@ -17,8 +20,10 @@ import android.content.Loader;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.AlarmClock;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -31,12 +36,15 @@ import android.widget.Spinner;
 
 import android.os.Bundle;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.example.android.todolist.data.TaskContract;
 import com.example.android.todolist.data.TaskContract.TaskEntry;
 import com.example.android.todolist.data.TaskDbHelper;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 public class EditorActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -52,22 +60,22 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
      */
     private Uri mCurrentTaskUri;
 
-
+    private TextView set_time;
     /**
      * EditText field to enter the pet's name
      */
     private EditText mNameEditText;
-
     /**
      * EditText field to enter the pet's breed
      */
     private EditText mDescriptionEditText;
-
     /**
      * EditText field to enter the pet's weight
      */
-    private EditText mTimeEditText;
+    private EditText mHoursEditText;
 
+
+    private EditText mMinEditText;
     /**
      * EditText field to enter the pet's gender
      */
@@ -126,18 +134,41 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         // Find all relevant views that we will need to read user input from
         mNameEditText = (EditText) findViewById(R.id.edit_pet_name);
         mDescriptionEditText = (EditText) findViewById(R.id.edit_pet_breed);
-        mTimeEditText = (EditText) findViewById(R.id.edit_pet_weight);
+        mHoursEditText = (EditText) findViewById(R.id.hours);
+        mMinEditText = (EditText) findViewById(R.id.min);
         mPrioritySpinner = (Spinner) findViewById(R.id.spinner_gender);
         mDone = (TextView) findViewById(R.id.done);
+        set_time = (TextView) findViewById(R.id.set_time);
+        GradientDrawable setTime = (GradientDrawable) set_time.getBackground();
+        setTime.setColor(getResources().getColor(R.color.colorAccent));
         // Setup OnTouchListeners on all the input fields, so we can determine if the user
         // has touched or modified them. This will let us know if there are unsaved changes
         // or not, if the user tries to leave the editor without saving.
         mNameEditText.setOnTouchListener(mTouchListener);
         mDescriptionEditText.setOnTouchListener(mTouchListener);
-        mTimeEditText.setOnTouchListener(mTouchListener);
+        mHoursEditText.setOnTouchListener(mTouchListener);
+        mMinEditText.setOnTouchListener(mTouchListener);
         mPrioritySpinner.setOnTouchListener(mTouchListener);
 
         setupSpinner();
+
+        set_time.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Calendar calendar = Calendar.getInstance();
+                int current_hour = calendar.get(Calendar.HOUR_OF_DAY);
+                int current_min = calendar.get(Calendar.MINUTE);
+                TimePickerDialog timePickerDialog = new TimePickerDialog(EditorActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int hourOfDay, int minute) {
+
+                        mHoursEditText.setText(String.format("%02d", hourOfDay));
+                        mMinEditText.setText(String.format("%02d", minute));
+                    }
+                    },current_hour,current_min,false);
+                    timePickerDialog.show();
+                }
+        });
     }
 
     /**
@@ -183,10 +214,11 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     private void saveTask() {
         String nameString = mNameEditText.getText().toString().trim();
         String descriptionString = mDescriptionEditText.getText().toString().trim();
-        String timeString = mTimeEditText.getText().toString().trim();
+        String hour = mHoursEditText.getText().toString();
+        String  min = mMinEditText.getText().toString();
 
         if( mCurrentTaskUri==null && TextUtils.isEmpty(nameString) && TextUtils.isEmpty(descriptionString)
-                && TextUtils.isEmpty(timeString) && mPriority==TaskEntry.PRIORITY_LOW)
+                && TextUtils.isEmpty(String.valueOf(hour)) && TextUtils.isEmpty(String.valueOf(min)) && mPriority==TaskEntry.PRIORITY_LOW)
         {
             return;
         }
@@ -203,48 +235,52 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         else{
             values.put(TaskEntry.COLUMN_TASK_STATUS, status);
         }
+        // If the time is not provided by the user, don't try to parse the string into an
+        // integer value. Use 0 by default.
+        if(hour.equals("") && min.equals("")){
+            hour = "00";
+            min = "00";
+        }
+            values.put(TaskEntry.COLUMN_TASK_HOURS, Integer.parseInt(hour));
+            values.put(TaskEntry.COLUMN_TASK_MIN, Integer.parseInt(min));
+
+        if(hour.equals("00") && min.equals("00")){
+          Toast.makeText(EditorActivity.this,"No alarm set for the task",Toast.LENGTH_SHORT).show();
+        }
+        else if(mDone.getText().toString().equals(getResources().getString(R.string.done)) || status.equals(getResources().getString(R.string.done))){
+            Toast.makeText(EditorActivity.this,"Task Completed",Toast.LENGTH_SHORT).show();
+        }
+        else{
+            createAlarm(nameString, Integer.parseInt(hour), Integer.parseInt(min));
+        }
+            if (mCurrentTaskUri == null) {
+                // This is a NEW pet, so insert a new pet into the provider,
+                // returning the content URI for the new pet.
+                Uri newUri = getContentResolver().insert(TaskEntry.CONTENT_URI, values);
+
+                // Show a toast message depending on whether or not the insertion was successful.
+                if (newUri == null) {
+                    Toast.makeText(this, "Inserting new task failed", Toast.LENGTH_SHORT).show();
+                }
+
+            } else {
+                // Otherwise this is an EXISTING pet, so update the pet with content URI: mCurrentPetUri
+                // and pass in the new ContentValues. Pass in null for the selection and selection args
+                // because mCurrentPetUri will already identify the correct row in the database that
+                // we want to modify.
+
+                int rowsAffected = getContentResolver().update(mCurrentTaskUri, values, null, null);
+
+                // Show a toast message depending on whether or not the update was successful.
+                if (rowsAffected == 0) {
+                    // If no rows were affected, then there was an error with the update.
+                    Toast.makeText(this, "Inserting new task failed", Toast.LENGTH_SHORT).show();
+                }
+            }
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
         editor.apply();
-        // If the time is not provided by the user, don't try to parse the string into an
-        // integer value. Use 0 by default.
-        int time = 0;
-
-        if(!TextUtils.isEmpty(timeString))
-        {
-            time = Integer.parseInt(timeString);
         }
-        values.put(TaskEntry.COLUMN_TASK_TIME,time);
-
-        if(mCurrentTaskUri==null)
-        {
-            // This is a NEW pet, so insert a new pet into the provider,
-            // returning the content URI for the new pet.
-            Uri newUri = getContentResolver().insert(TaskEntry.CONTENT_URI , values);
-
-            // Show a toast message depending on whether or not the insertion was successful.
-            if(newUri==null)
-            {
-                Toast.makeText(this, "Inserting new task failed",Toast.LENGTH_SHORT).show();
-            }
-
-        }else{
-            // Otherwise this is an EXISTING pet, so update the pet with content URI: mCurrentPetUri
-            // and pass in the new ContentValues. Pass in null for the selection and selection args
-            // because mCurrentPetUri will already identify the correct row in the database that
-            // we want to modify.
-
-            int rowsAffected = getContentResolver().update(mCurrentTaskUri,values,null,null);
-
-            // Show a toast message depending on whether or not the update was successful.
-            if(rowsAffected == 0)
-            {
-                // If no rows were affected, then there was an error with the update.
-                Toast.makeText(this,"Inserting new task failed",Toast.LENGTH_SHORT).show();
-            }
-        }
-
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -371,7 +407,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 TaskEntry.COLUMN_TASK_NAME,
                 TaskEntry.COLUMN_TASK_DESCRIPTION,
                 TaskEntry.COLUMN_TASK_PRIORITY,
-                TaskEntry.COLUMN_TASK_TIME,
+                TaskEntry.COLUMN_TASK_HOURS,
+                TaskEntry.COLUMN_TASK_MIN,
                 TaskEntry.COLUMN_TASK_STATUS
         };
         // This loader will execute the ContentProvider's query method on a background thread
@@ -397,19 +434,29 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             int nameColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_NAME);
             int descriptionColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_DESCRIPTION);
             int priorityColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_PRIORITY);
-            int timeColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_TIME);
+            int hourColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_HOURS);
+            int minColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_MIN);
             int statusColumnIndex = cursor.getColumnIndex(TaskEntry.COLUMN_TASK_STATUS);
             // Extract out the value from the Cursor for the given column index
             String name = cursor.getString(nameColumnIndex);
             String description = cursor.getString(descriptionColumnIndex);
             int priority = cursor.getInt(priorityColumnIndex);
-            int weight = cursor.getInt(timeColumnIndex);
+            int hours = cursor.getInt(hourColumnIndex);
+            int min = cursor.getInt(minColumnIndex);
             String status = cursor.getString(statusColumnIndex);
             // Update the views on the screen with the values from the database
 
             mNameEditText.setText(name);
             mDescriptionEditText.setText(description);
-            mTimeEditText.setText(Integer.toString(weight));
+            if(hours==0 && min==0){
+                mHoursEditText.setText("");
+                mMinEditText.setText("");
+            }
+            else {
+                mHoursEditText.setText(Integer.toString(hours));
+                mMinEditText.setText(Integer.toString(min));
+            }
+
             mDone.setText(status);
             if(status.equals(getResources().getString(R.string.done))){
                 mDone.setTextColor(getResources().getColor(R.color.green_lowPriority));
@@ -437,7 +484,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         // If the loader is invalidated, clear out all the data from the input fields
         mNameEditText.setText("");
         mDescriptionEditText.setText("");
-        mTimeEditText.setText("");
+        mHoursEditText.setText("");
+        mMinEditText.setText("");
         mPrioritySpinner.setSelection(0);
         mDone.setText(R.string.pending_task);
     }
@@ -576,5 +624,17 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     private void notification_cancel() {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(ID);
+    }
+    public void createAlarm(String message, int hour, int minutes) {
+        Intent intent = new Intent(AlarmClock.ACTION_SET_ALARM)
+                .putExtra(AlarmClock.EXTRA_MESSAGE, message)
+                .putExtra(AlarmClock.EXTRA_HOUR, hour)
+                .putExtra(AlarmClock.EXTRA_MINUTES, minutes);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        }
+        else{
+            Toast.makeText(EditorActivity.this, "No app to handle", Toast.LENGTH_LONG).show();
+        }
     }
 }
