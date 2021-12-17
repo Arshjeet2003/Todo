@@ -632,8 +632,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 .putExtra(AlarmClock.EXTRA_MINUTES, minutes);
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
-        }
-        else{
+        }        else{
             Toast.makeText(EditorActivity.this, "No app to handle", Toast.LENGTH_LONG).show();
         }
     }
